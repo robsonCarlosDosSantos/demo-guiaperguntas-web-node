@@ -1,6 +1,14 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+const connection = require("./datebase/datebase");
+
+//Database
+connection.authenticate().then(() => {
+    console.log("Conexao feita com banco de dados!");
+}).catch((erro) => {
+    console.log("Erro ao tentar conexao com o banco de dados: "+erro);
+});
 
 //Dizendo para o express usar o ejs como view engine
 //express he configurado para buscar o html na pasta views
