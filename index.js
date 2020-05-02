@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const connection = require("./datebase/datebase");
 const perguntaModel = require("./datebase/Pergunta");
+const respostaModel = require("./datebase/Resposta");
 
 //Database
 connection.authenticate().then(() => {
@@ -25,7 +26,13 @@ app.use(bodyParser.json());
 
 //Rotas
 app.get("/", (req, res) => {
-    res.render("index");
+    perguntaModel.findAll({raw : true, order : [
+        ['id','desc']
+    ]}).then((perguntas) => {
+        res.render("index",{
+            perguntas: perguntas
+        });
+    });
 });
 
 app.get("/perguntar", (req, res) => {
@@ -43,6 +50,39 @@ app.post("/salvarPergunta", (req, res) => {
         res.redirect("/");
     });
 
+});
+
+app.get("/pergunta/:id", (req, res) => {
+    var id = req.params.id;
+    perguntaModel.findOne({ where : {id : id}}).then((pergunta) => {
+        if(pergunta != undefined){
+
+            respostaModel.findAll({ 
+                where : { 
+                    perguntaId : pergunta.id 
+                },
+                order: [['id','desc']
+            ]}).then(respostas => {
+                res.render("pergunta",{
+                    pergunta: pergunta,
+                    respostas: respostas
+                });
+            });
+        }else{
+            res.redirect("/");
+        }
+    });
+});
+
+app.post("/resposta", (req, res) => {
+    var corpo = req.body.corpo;
+    var perguntaId = req.body.perguntaId;
+    respostaModel.create({
+        corpo: corpo,
+        perguntaId: perguntaId
+    }).then(() => {
+        res.redirect("/pergunta/"+perguntaId);
+    });
 });
 
 //Start server
